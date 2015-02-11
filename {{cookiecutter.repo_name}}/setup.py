@@ -7,8 +7,10 @@ import sys
 
 try:
     from setuptools import setup
+    from setuptools.command.install import install
 except ImportError:
     from distutils.core import setup
+    from distutils.command.install import install
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
@@ -19,6 +21,14 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 with open('requirements.txt') as f:
     required = f.read().splitlines()
+
+class post_install(install):
+    def run(self):
+        install.run(self)
+        if "VIRTUAL_ENV" in os.environ:
+            import shutil
+            env = os.environ["VIRTUAL_ENV"]
+            shutil.copytree(os.path.join({{cookiecutter.repo_name}},"static"), os.path.join(env, "static"))
 
 setup(
     name='{{ cookiecutter.repo_name }}',
@@ -49,4 +59,5 @@ setup(
         'Programming Language :: Python :: 3.3',
     ],
     test_suite='tests',
+    cmdclass={'install': post_install}
 )
